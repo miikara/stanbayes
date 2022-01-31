@@ -127,3 +127,44 @@ for (i in 1:length(alpha_betas)) {
 print(posterior_predictive_probabilities)
 
 # The probabilities are slightly above 20% using any of the four priors with only small differences
+
+### Ex 3.
+# a)
+# Compute quantiles for both amounts of n
+
+beta_confidence_interval <-function(confidence_level, chosen_alpha, chosen_beta){
+  result_vector <-c()
+  lower_bound <-qbeta(confidence_level, chosen_alpha, chosen_beta)
+  upper_bound <-qbeta(1-confidence_level, chosen_alpha, chosen_beta)
+  result_vector[1] <-lower_bound
+  result_vector[2] <-upper_bound
+  return(result_vector)
+}
+
+conf_interval_n_3 <-beta_confidence_interval(confidence_level = 0.05, chosen_alpha = (1 + trues), chosen_beta = (1 + falses))
+print(conf_interval_n_3)
+conf_interval_n_25 <-beta_confidence_interval(confidence_level = 0.05, chosen_alpha = (1 + trues_2), chosen_beta = (1 + falses_2))
+print(conf_interval_n_25)
+
+# The posterior confidence is wider in the case where we had only three observations
+# This is quite natural as we are less confinent about the location of the true parameter value
+
+# b)
+# Posterior densities with confidence intervals when prior alpha = beta = 1
+thetas <-seq(0, 1, by = 0.01)
+plot(NULL, xlim = c(0,1), ylim = c(0,6), ann = FALSE)
+title(main="Beta posterior distributions (n=3)", xlab = "Theta", ylab = "")
+lines(thetas, dbeta(x = thetas, shape1 = 1 + trues, shape2 = 1 + falses), col = "red")
+abline(v = conf_interval_n_3[1], lty = 2, col = "black")
+abline(v = conf_interval_n_3[2], lty = 2, col = "black")
+legend(x = 0.4, y = 6, legend = c("a=1, beta=1 prior", "95% confidence"), fill = c("red", "black"), cex = 0.7)
+
+thetas <-seq(0, 1, by = 0.01)
+plot(NULL, xlim = c(0,1), ylim = c(0,6), ann = FALSE)
+title(main="Beta posterior distributions (n=25)", xlab = "Theta", ylab = "")
+lines(thetas, dbeta(x = thetas, shape1 = 1 + trues_2, shape2 = 1 + falses_2), col = "red")
+abline(v = conf_interval_n_25[1], lty = 2, col = "black")
+abline(v = conf_interval_n_25[2], lty = 2, col = "black")
+legend(x = 0.4, y = 6, legend = c("a=1, beta=1 prior", "95% confidence"), fill = c("red", "black"), cex = 0.7)
+
+
