@@ -1,8 +1,10 @@
 ### Ex. 2
 # install.packages("foreign")
 # install.packages("tidyverse")
+# install.packages("VGAM")
 library(foreign)
 library(tidyverse)
+library(VGAM)
 
 # a)
 result_data <-read.csv("2008ElectionResult.csv")
@@ -81,3 +83,44 @@ text(liberal_polls_per_state$poll_volume,
 title(main="Poll size vs liberal %", xlab = "poll volume", ylab = "liberal %")
 
 ## Ex 3.
+# a) Fixing the beta distribution parameters leads to prior predictive distribution 
+# that is beta-binomial with parameters n, alpha = 1, beta = 1 or any fixed value
+# This is because the prior is beta distributed and the sampling is binomial
+
+# b)
+# When calculating a_hat and b_hat we know their rough range so we can set a = 10 and b = 100 for the optimizer's initial values
+# I use these instead of provided a = 1 & b = 10
+neg_log_likelihood <- function(a, b){-sum(dbetabinom.ab(x = liberal_polls_per_state$liberal_poll_volume,
+                     size = liberal_polls_per_state$poll_volume,
+                     shape1 = a, 
+                     shape2 = b,
+                     log = TRUE, 
+                     limit.prob = 0.5))
+}
+
+mles <- mle(minuslogl = neg_log_likelihood, start = list(a = 10, b = 100), method = "L-BFGS-B")
+mles
+# Coefficients are 15.6 and 317.5
+a_hat <-15.6
+b_hat <-317.5
+
+# c)
+# From R exercise 2.1 we know that the posterior is beta(a+y, b+n-y)
+# (polling prior (observed parameters) is beta distributed since it models P)
+# Beta models probability of success with a-1 representing successes and b-1 representing failures
+# That means the CDF's area under the curve represents the probability that a probability is something
+# Binomial models number of successes
+
+# Compute posterior means for share of liberals for each state with polling
+# Mean of beta distribution is a / (a + b)
+liberal_polls_per_state$posterior_mean <- (a_hat + liberal_polls_per_state$liberal_poll_volume)/ (a_hat + liberal_polls_per_state$liberal_poll_volume +
+            b_hat + liberal_polls_per_state$poll_volume -liberal_polls_per_state$liberal_poll_volume)
+
+plot(liberal_polls_per_state$poll_volume,
+     liberal_polls_per_state$posterior_mean,
+     type = "n",
+     ann = FALSE)
+text(liberal_polls_per_state$poll_volume,
+     liberal_polls_per_state$posterior_mean,
+     labels = liberal_polls_per_state$state_code,
+     cex = 0.5)
